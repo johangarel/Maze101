@@ -1,7 +1,7 @@
 import pygame
 from .settings import (TILE_SIZE, TORCH_EFFECT, KEY_COLORS, 
                        PLAYER_WIDTH, INVICIBILITY_TIME, SHADOW_DELAY, 
-                       HEAL_EFFECT, SPEED_EFFECT, PLAYER_HEALTH)
+                       HEAL_EFFECT, SPEED_EFFECT, PLAYER_HEALTH, PLAYER_SPEED)
 
 
 # ==================================================================
@@ -53,6 +53,8 @@ class Player:
         for obj in game.levels.special_objs(game.maze):
             rect2 = future_rect.inflate(-2,-2)
             if obj.__class__.__name__ == 'Trap' and obj.rect.colliderect(rect2):
+                return False
+            if obj.__class__.__name__ == 'DynamicWall' and obj.rect.colliderect(future_rect):
                 return False
             
         if not self.is_in_bounds_horizontal(dx, game):
@@ -139,6 +141,7 @@ class Player:
         self.y = y
         self.respawn_pos = (x,y)
         self.keys = []
+        self.speed = PLAYER_SPEED
         self.rect = pygame.Rect(self.x,self.y,self.width,self.width)
         self.direction = "right"
         self.health = self.max_health
@@ -150,6 +153,7 @@ class Player:
         self.x = x
         self.y = y
         self.keys = []
+        self.speed = PLAYER_SPEED
         self.rect = pygame.Rect(self.x,self.y,self.width,self.width)
         self.health = self.max_health
         self.trap_invincibility_timer = 0.0
@@ -481,6 +485,83 @@ class Wall :
         self.rect = pygame.Rect(x, y, width, height)
         self.x1, self.y1 = x, y
         self.x2, self.y2 = x + width, y + height
+
+class DynamicWall:
+    """A wall that moves between two positions and pushes the player/enemies."""
+    
+    def __init__(self, x1, y1, x2, y2, wall_type, img):
+        self.wall_type = wall_type
+        self.img = img
+        
+        # Dimensions
+        if wall_type == "vertical":
+            self.width = 40
+            self.height = 10
+        else:  # horizontal
+            self.width = 10
+            self.height = 40
+        
+        # Position and movement
+        self.x = x1
+        self.y = y1
+        self.start_x = x1
+        self.start_y = y1
+        self.end_x = x2
+        self.end_y = y2
+        
+        # Movement parameters
+        self.speed = 100  # pixels per second
+        self.direction = 1  # 1 or -1 for forward/backward
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        
+        # Calculate total distance
+        self.total_distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+        if self.total_distance == 0:
+            self.total_distance = 1  # Avoid division by zero
+    
+    def update(self, dt: float) -> None:
+        """Update position of the dynamic wall."""
+        if self.total_distance <= 0:
+            return
+        
+        # Current distance from start
+        curr_dist = ((self.x - self.start_x) ** 2 + (self.y - self.start_y) ** 2) ** 0.5
+        
+        # Move
+        movement = self.speed * dt * self.direction
+        next_dist = curr_dist + movement
+        
+        # Bounce at boundaries
+        if next_dist <= 0:
+            self.direction = 1
+            next_dist = 0
+        elif next_dist >= self.total_distance:
+            self.direction = -1
+            next_dist = self.total_distance
+        
+        # Set position based on progress
+        if self.total_distance > 0:
+            progress = next_dist / self.total_distance
+            self.x = self.start_x + (self.end_x - self.start_x) * progress
+            self.y = self.start_y + (self.end_y - self.start_y) * progress
+        
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+    
+    def get_push_direction(self):
+        """Return the direction to push entities (normalized)."""
+        if self.total_distance == 0:
+            return (0, 0)
+        
+        dx = self.end_x - self.start_x
+        dy = self.end_y - self.start_y
+        dist = (dx ** 2 + dy ** 2) ** 0.5
+        
+        if dist == 0:
+            return (0, 0)
+        
+        # Reverse direction if moving backward
+        push_dir = -1 if self.direction == -1 else 1
+        return (dx / dist * push_dir, dy / dist * push_dir)
 
 class Door :
     def __init__(self,x,y,width: int,height: int,id=""):

@@ -2,7 +2,7 @@ import os
 import pygame
 from pygame.locals import *
 
-from .entities import Player, Door, Key, Trap, Winpad, Portal, ButtonUI, Light, SubMapPortal, TextUI, Shadow, Heal, Speed
+from .entities import Player, Door, Key, Trap, Winpad, Portal, ButtonUI, Light, SubMapPortal, TextUI, Shadow, Heal, Speed, DynamicWall
 from .utils import invert_color
 from .settings import (
     WIDTH, HEIGHT, NB_LEVELS, TILE_SIZE, FPS,
@@ -341,6 +341,9 @@ class Game:
             else :
                 self.walk_timer -= self.dt
 
+        # Update dynamic walls and handle push mechanics
+        self._update_dynamic_walls()
+
         self._process_objects()
         self._process_enemies()
         
@@ -471,6 +474,55 @@ class Game:
         if self.player.is_dead():
             self._respawn()
 
+    def _update_dynamic_walls(self):
+        """Update dynamic walls and push player/enemies if touching."""
+        current_map = self.current_map_index
+        
+        for obj in self.levels.special_objs(self.maze):
+            if not isinstance(obj, DynamicWall):
+                continue
+            
+            # Update wall position
+            obj.update(self.dt)
+            
+            # Push player if touching
+            if obj.rect.colliderect(self.player.rect.inflate(-2,-2)):
+                push_dx, push_dy = obj.get_push_direction()
+                push_amount = 150 * self.dt  # pixels per second
+                push_x = push_dx * push_amount
+                push_y = push_dy * push_amount
+                # Try to push in the push direction
+                walls = list(self.levels.walls(self.maze))
+                for wall_obj in self.levels.special_objs(self.maze):
+                    if isinstance(wall_obj, Door) and not wall_obj.opened:
+                        walls.append(wall_obj)
+                # Push player
+                if (push_dx < 0 and obj.x >= self.player.x) or (push_dx > 0 and obj.x + obj.width/2 <= self.player.x):
+                    self.player.x += push_x
+                if (push_dy < 0 and obj.y >= self.player.y) or (push_dy > 0 and obj.y + obj.height/2 <= self.player.y):
+                    self.player.y += push_y
+                self.player.rect = pygame.Rect(self.player.x, self.player.y, self.player.width, self.player.width)
+            
+            # Push enemies if touching
+            for enemy in self.levels.enemies(self.maze):
+                if enemy.map_index != current_map:
+                    continue
+                
+                if obj.rect.colliderect(enemy.rect):
+                    push_dx, push_dy = obj.get_push_direction()
+                    push_amount = 150 * self.dt  # pixels per second
+                    push_x = push_dx * push_amount
+                    push_y = push_dy * push_amount
+                    # Push enemy in direction
+                    walls = list(self.levels.walls(self.maze))
+                    # Check collision with walls before pushing
+                    if (push_dx < 0 and obj.x >= enemy.x) or (push_dx > 0 and obj.x + obj.width/2 <= enemy.x):
+                        enemy.x += push_x
+                    if (push_dy < 0 and obj.y >= enemy.y) or (push_dy > 0 and obj.y + obj.height/2 <= enemy.y):
+                        enemy.y += push_y
+                    
+                    enemy.rect = pygame.Rect(int(enemy.x), int(enemy.y), enemy.width, enemy.width)
+
     # ==================================================================
     # Rendering
     # ==================================================================
@@ -529,6 +581,14 @@ class Game:
                 self.screen.blit(obj.img, (obj.x, obj.y))
             elif isinstance(obj, SubMapPortal):
                 self.screen.blit(obj.img, (obj.x, obj.y))
+            elif isinstance(obj, DynamicWall):
+                if obj.img and obj.wall_type == "vertical":
+                    self.screen.blit(obj.img, (obj.x, obj.y))
+                elif obj.img and obj.wall_type == "horizontal":
+                    # Rotate the image 90 degrees for horizontal walls
+                    rotated_img = pygame.transform.rotate(obj.img, -90)
+                    # Adjust position to center the rotated image
+                    self.screen.blit(rotated_img, (obj.x, obj.y))
 
         # Shadow (drawn before player so it appears below)
         if self.levels.shadow_enabled:

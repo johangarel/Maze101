@@ -1,4 +1,4 @@
-from .entities import Wall, Trap, Portal, Key, Door, Player, Winpad, Light, SubMapPortal, Heal, Speed
+from .entities import Wall, Trap, Portal, Key, Door, Player, Winpad, Light, SubMapPortal, Heal, Speed, DynamicWall
 from .utils import optimise_walls
 from .settings import WALL_THICKNESS, BANNED_BUILDING_CHARACTERS, TILE_SIZE
 
@@ -40,6 +40,73 @@ class Maze:
                     self.special_objs.append(result)
 
         self.walls = optimise_walls(raw_walls)
+        
+        # Build dynamic walls after parsing all tiles
+        self._build_dynamic_walls(layout, game)
+
+    # ------------------------------------------------------------------
+    # Dynamic walls builder
+    # ------------------------------------------------------------------
+    
+    def _build_dynamic_walls(self, layout, game):
+        """Build vertical (V) and horizontal (H) dynamic walls."""
+        # Scan for vertical walls (V)
+        self._build_dynamic_walls_by_type(layout, game, 'V', 'vertical')
+        # Scan for horizontal walls (H)
+        self._build_dynamic_walls_by_type(layout, game, 'H', 'horizontal')
+    
+    def _build_dynamic_walls_by_type(self, layout, game, char_type, wall_type):
+        """Build dynamic walls of a specific type (V or H)."""
+        if char_type == 'V':
+            # Scan by columns for vertical walls
+            for col_id in range(len(layout[0]) if layout else 0):
+                positions = []
+                for row_id in range(len(layout)):
+                    if col_id < len(layout[row_id]) and layout[row_id][col_id] == char_type:
+                        positions.append(row_id)
+                
+                # Process pairs of positions
+                self._create_dynamic_walls_from_pairs(
+                    positions, layout, game, wall_type, col_id, None
+                )
+        else:  # char_type == 'H'
+            # Scan by rows for horizontal walls
+            for row_id in range(len(layout)):
+                positions = []
+                for col_id in range(len(layout[row_id])):
+                    if layout[row_id][col_id] == char_type:
+                        positions.append(col_id)
+                
+                # Process pairs of positions
+                self._create_dynamic_walls_from_pairs(
+                    positions, layout, game, wall_type, None, row_id
+                )
+    
+    def _create_dynamic_walls_from_pairs(self, positions, layout, game, wall_type, col_id, row_id):
+        """Create dynamic walls from pairs of positions. Skip last one if odd count."""
+        # If odd number of positions, remove the last one
+        if len(positions) % 2 == 1:
+            positions = positions[:-1]
+        
+        # Create walls from pairs
+        for i in range(0, len(positions), 2):
+            pos1 = positions[i]
+            pos2 = positions[i + 1]
+            
+            if col_id is not None:  # Vertical wall
+                x = col_id * game.tile_size + game.tile_size // 2 - 20  # Center 40-pixel width
+                y1 = pos1 * game.tile_size + game.tile_size // 2 - 5  # Center 10-pixel height
+                y2 = pos2 * game.tile_size + game.tile_size // 2 - 5
+                
+                dynamic_wall = DynamicWall(x, y1, x, y2, wall_type, game.assets.get("_dynamic_wall"))
+            else:  # Horizontal wall
+                y = row_id * game.tile_size + game.tile_size // 2 - 20  # Center 40-pixel height
+                x1 = pos1 * game.tile_size + game.tile_size // 2 - 5  # Center 10-pixel width
+                x2 = pos2 * game.tile_size + game.tile_size // 2 - 5
+                
+                dynamic_wall = DynamicWall(x1, y, x2, y, wall_type, game.assets.get("_dynamic_wall"))
+            
+            self.special_objs.append(dynamic_wall)
 
     # ------------------------------------------------------------------
     # tile parser – one method, one responsibility
@@ -73,7 +140,7 @@ class Maze:
             return "spawn"
 
         # ── Victory pad ─────────────────────────────────────────────────
-        if char == "V":
+        if char == "!":
             return Winpad(x, y, game.assets["winpad"])
 
         # ── Trap ────────────────────────────────────────────────────────
@@ -183,20 +250,13 @@ class Maze:
 
     def _build_submap_portal(self, x, y, game, map_index):
         """Returns a SubMapPortal if a route is configured, else None."""
-        level_id = game.maze
         routes   = self.submap_routes
 
         # Convert map_index to string (keys in JSON are strings)
         map_index_str = str(map_index)
         portal_index_str = str(self.sub_portal_count)
 
-        config = None
-        if (
-            level_id in routes
-            and map_index_str in routes[level_id]
-            and portal_index_str in routes[level_id][map_index_str]
-        ):
-            config = routes[level_id][map_index_str][portal_index_str]
+        config = routes.get(map_index_str, {}).get(portal_index_str)
 
         if config:
             # Convert grid coordinates to pixels if spawn_pos is in grid format

@@ -53,7 +53,8 @@ class AssetsManager:
             "enemy":"enemy.png",
             "shadow":"shadow.png",
             "heal":"HEALTH.png",
-            "speed":"SPEED.png"
+            "speed":"SPEED.png",
+            "_dynamic_wall": "_dynamic_wall.png"
         }
         
         for key, filename in images.items():

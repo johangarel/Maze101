@@ -5,3 +5,4 @@ build/
 dist/
 *.spec
 build_game.bat
+.venv/

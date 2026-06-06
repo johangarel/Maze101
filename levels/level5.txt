@@ -1,5 +1,5 @@
-                       
-           V           
+        H     H        
+        H  !  H        
    E    WWWWWWW     E  
                        
    WW                  
@@ -11,8 +11,8 @@
     WW     W  W        
            W  WWWW     
         WWWW           
-           P  W        
+        V  P  W        
     W         WW       
-    WW         W       
+    WW  V      W       
     +WW       WW       
                        

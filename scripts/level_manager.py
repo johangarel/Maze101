@@ -140,7 +140,7 @@ class LevelManager:
             layout[19]     = "".join(row_list)
 
         else:  # map_index == 2
-            layout = generate_custom_maze(31, 21, (" ", 0, 1), ("V", 30, 19))
+            layout = generate_custom_maze(31, 21, (" ", 0, 1), ("!", 30, 19))
 
         return layout, spawn_override
 
