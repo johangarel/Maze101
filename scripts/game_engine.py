@@ -2,7 +2,7 @@ import os
 import pygame
 from pygame.locals import *
 
-from .entities import Player, Door, Key, Trap, Winpad, Portal, ButtonUI, Light, SubMapPortal, TextUI, Shadow, Heal, Speed, DynamicWall
+from .entities import Player, Door, Key, Trap, Winpad, Portal, ButtonUI, Light, SubMapPortal, TextUI, Shadow, Heal, Speed, DynamicWall, Shield
 from .utils import invert_color
 from .settings import (
     WIDTH, HEIGHT, NB_LEVELS, TILE_SIZE, FPS,
@@ -14,7 +14,7 @@ from .settings import (
     KEY_COLORS, DEFAULT_KEY_COLOR, SETTINGS_TITLE, FPS_PRESETS,
     KEY_BINDINGS_DEFAULT, HEIGHT_SETTINGS, SAVE_TEXT, RESET_TEXT,
     DEFAULT_MUSIC_VOL, DEFAULT_SFX_VOL, HEAL_EFFECT, PLAYER_HEALTH,
-    SPEED_TIME, SPEED_EFFECT
+    SPEED_TIME, SPEED_EFFECT, SHIELD_TIME
 )
 from .assets_manager import AssetsManager
 from .audio_manager import AudioManager
@@ -119,6 +119,7 @@ class Game:
             self.handle_events()
             self.update()
             self.render()
+        pygame.quit()
 
     # ==================================================================
     # Events
@@ -423,8 +424,6 @@ class Game:
             elif isinstance(obj, Speed):
                 if obj.is_touched(self.player) and obj.cooldown == 0.0:
                     obj.collect()
-                    if self.audio.music_play :
-                        self.audio.play_sfx("sfx_light")
                     obj.cooldown = 2*SPEED_TIME
                     self.player.speed += SPEED_EFFECT
                 if 0.0 < obj.cooldown <= 2*SPEED_TIME:
@@ -434,7 +433,19 @@ class Game:
                         obj.respawn()
                     elif obj.cooldown <= SPEED_TIME and self.player.speed == PLAYER_SPEED + SPEED_EFFECT :
                         self.player.speed -= SPEED_EFFECT
-
+            
+            elif isinstance(obj, Shield):
+                if obj.is_touched(self.player) and obj.cooldown == 0.0:
+                    obj.collect()
+                    obj.cooldown = 2*SHIELD_TIME
+                    self.player.invicible = True
+                if 0.0 < obj.cooldown <= 2*SHIELD_TIME:
+                    obj.cooldown -= self.dt
+                    if obj.cooldown <= 0.0:
+                        obj.cooldown = 0.0
+                        obj.respawn()
+                    elif obj.cooldown <= SHIELD_TIME and self.player.invicible == True :
+                        self.player.invicible = False
 
             # Sub-map
             elif isinstance(obj, SubMapPortal) and obj.is_touched(self.player):
@@ -579,6 +590,8 @@ class Game:
                 self.screen.blit(obj.img, (obj.x, obj.y))
             elif isinstance(obj, Speed) and not obj.collected:
                 self.screen.blit(obj.img, (obj.x, obj.y))
+            elif isinstance(obj, Shield) and not obj.collected:
+                self.screen.blit(obj.img, (obj.x,obj.y))
             elif isinstance(obj, SubMapPortal):
                 self.screen.blit(obj.img, (obj.x, obj.y))
             elif isinstance(obj, DynamicWall):
@@ -605,17 +618,24 @@ class Game:
                 img = self.assets[f"enemy_{enemy.direction}"]
                 self.screen.blit(img, (enemy.x, enemy.y))
 
+        # Walls
         level_color = self.level_colors.get(self.maze, (255, 255, 255))
         for wall in walls:
             pygame.draw.rect(self.screen, level_color,
                              (wall.x1, wall.y1, wall.x2 - wall.x1, wall.y2 - wall.y1))
 
+        # Shield (always around the player)
+        if self.player.invicible :
+            pygame.draw.circle(self.screen, (0,255,255), (self.player.x + self.player.width//2, self.player.y + self.player.width//2), 35.0, 2)
+
+        # Fog of war
         if self.levels.has_fow(self.maze):
             self._draw_fog()
 
         # Render health bar
         self._render_health_bar()
 
+        # Render timer
         timer_txt = TextUI(
             self.width-100, 30, self.assets["font_small"], f"Time : {self.seconds}", (255, 255, 255)
             )

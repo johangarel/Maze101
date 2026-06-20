@@ -27,6 +27,8 @@ class Player:
         self.trap_invincibility_timer = 0.0
         self.enemy_invincibility_timer = 0.0
         self.INVINCIBILITY_DURATION = INVICIBILITY_TIME  # seconds
+        # Shield system
+        self.invicible = False
 
     def modify_speed(self,speed: int):
         self.speed = speed
@@ -147,6 +149,7 @@ class Player:
         self.health = self.max_health
         self.trap_invincibility_timer = 0.0
         self.enemy_invincibility_timer = 0.0
+        self.invicible = False
 
     def respawn(self):
         x,y = self.respawn_pos
@@ -158,6 +161,7 @@ class Player:
         self.health = self.max_health
         self.trap_invincibility_timer = 0.0
         self.enemy_invincibility_timer = 0.0
+        self.invicible = False
 
     def pick_up_key(self,key):
         assert isinstance(key,Key)
@@ -165,12 +169,12 @@ class Player:
         key.collect()
 
     def take_trap_damage(self):
-        if self.trap_invincibility_timer <= 0:
+        if self.trap_invincibility_timer <= 0 and not self.invicible:
             self.health = max(0, self.health - 50)
             self.trap_invincibility_timer = self.INVINCIBILITY_DURATION
 
     def take_enemy_damage(self):
-        if self.enemy_invincibility_timer <= 0:
+        if self.enemy_invincibility_timer <= 0 and not self.invicible:
             self.health = max(0, self.health - 25)
             self.enemy_invincibility_timer = self.INVINCIBILITY_DURATION
 
@@ -429,7 +433,7 @@ class Shadow:
         self.position_history.append((player.x, player.y, player.direction, current_time))
     
     def update(self, current_time: float) -> None:
-        # Look for position from 3 seconds ago
+        # Look for position from x seconds ago
         target_time = current_time - self.delay
         
         # Find the closest position in history before target_time
@@ -699,6 +703,23 @@ class Speed :
     def is_touched(self,player: Player) -> bool:
         return self.x < player.x + player.width // 2 < self.x + self.width and self.y < player.y + player.width // 2 < self.y + self.width
 
+    def collect(self):
+        self.collected = True
+    
+    def respawn(self):
+        self.collected = False
+
+class Shield : 
+    def __init__(self,x,y,img):
+        self.x,self.y = x,y
+        self.width = TILE_SIZE
+        self.collected = False
+        self.img = img
+        self.cooldown = 0.0
+
+    def is_touched(self,player: Player) -> bool:
+        return self.x < player.x + player.width // 2 < self.x + self.width and self.y < player.y + player.width // 2 < self.y + self.width
+    
     def collect(self):
         self.collected = True
     

@@ -33,6 +33,8 @@ HEAL_EFFECT = 50
 SPEED_EFFECT = 200
 SPEED_TIME = 5.0
 
+SHIELD_TIME = 4.0
+
 WALL_THICKNESS = 10
 
 FADE_SPEED = {
@@ -78,7 +80,7 @@ KEY_COLORS = {
 
 DEFAULT_KEY_COLOR = (200, 200, 200)
 
-# Objects that walls shouldn't connect with
+# Objects written with capital letters that walls shouldn't connect with
 BANNED_BUILDING_CHARACTERS = ["P","L","S","E","V","H"]
 
 KEY_BINDINGS_DEFAULT = {

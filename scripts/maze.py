@@ -1,4 +1,4 @@
-from .entities import Wall, Trap, Portal, Key, Door, Player, Winpad, Light, SubMapPortal, Heal, Speed, DynamicWall
+from .entities import Wall, Trap, Portal, Key, Door, Player, Winpad, Light, SubMapPortal, Heal, Speed, DynamicWall, Shield
 from .utils import optimise_walls
 from .settings import WALL_THICKNESS, BANNED_BUILDING_CHARACTERS, TILE_SIZE
 
@@ -109,7 +109,7 @@ class Maze:
             self.special_objs.append(dynamic_wall)
 
     # ------------------------------------------------------------------
-    # tile parser – one method, one responsibility
+    # Tile parser
     # ------------------------------------------------------------------
 
     def _parse_tile(
@@ -166,6 +166,10 @@ class Maze:
         # ── Speed ───────────────────────────────────────────────────────
         if char == ">":
             return Speed(x, y, game.assets["speed"])
+
+        # ── Shield ──────────────────────────────────────────────────────
+        if char == "#":
+            return Shield(x, y, game.assets["shield"])
 
         # ── Teleport portal (digit) ─────────────────────────────────────
         if char.isdigit():
