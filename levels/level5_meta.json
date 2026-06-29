@@ -4,7 +4,7 @@
   "reward": 0,
   "tps": [],
   "fow": false,
-  "shadow": false,
+  "shadow": 0,
   "enemies": [
     {
       "patrol": [[8, 4], [7, 12], [3,14], [1,5], [4, 3]]

@@ -38,12 +38,21 @@ class LevelManager:
         cfg = self.level_configs.get(maze_id)
         return bool(cfg and cfg.get("fow"))
     
-    def has_shadow(self, maze_id: int) -> bool:
-        """Check if shadow system is enabled for this level"""
+    def get_shadow_count(self, maze_id: int) -> int:
+        """Return the number of shadows enabled for this level."""
         meta_filename = f"level{maze_id}_meta.json"
         meta_data = load_level_meta(meta_filename)
-        return bool(meta_data.get("shadow", False))
-    
+        shadow_value = meta_data.get("shadow", 0)
+        if isinstance(shadow_value, bool):
+            return 1 if shadow_value else 0
+        try:
+            return int(shadow_value)
+        except (TypeError, ValueError):
+            return 0
+
+    def has_shadow(self, maze_id: int) -> bool:
+        return self.get_shadow_count(maze_id) > 0
+
     def enemies(self, maze_id):
         return self.enemy_list[maze_id - 1]
 

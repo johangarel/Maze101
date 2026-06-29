@@ -2,7 +2,9 @@ import os
 import pygame
 from pygame.locals import *
 
-from .entities import Player, Door, Key, Trap, Winpad, Portal, ButtonUI, Light, SubMapPortal, TextUI, Shadow, Heal, Speed, DynamicWall, Shield
+from .entities import (Player, Door, Key, Trap, Winpad, Portal, ButtonUI, 
+                       Light, SubMapPortal, TextUI, Shadow, Heal, Speed, 
+                       DynamicWall, Shield)
 from .utils import invert_color
 from .settings import (
     WIDTH, HEIGHT, NB_LEVELS, TILE_SIZE, FPS,
@@ -12,9 +14,9 @@ from .settings import (
     GAME_NAME, GAME_VERSION, START_TEXT, PLAY_TEXT, RECORD_TEXT,
     VICTORY_TEXT, LOADING_TEXT, TUTORIAL_FR_TEXT, TUTORIAL_EN_TEXT,
     KEY_COLORS, DEFAULT_KEY_COLOR, SETTINGS_TITLE, FPS_PRESETS,
-    KEY_BINDINGS_DEFAULT, HEIGHT_SETTINGS, SAVE_TEXT, RESET_TEXT,
+    HEIGHT_SETTINGS, SAVE_TEXT, RESET_TEXT,
     DEFAULT_MUSIC_VOL, DEFAULT_SFX_VOL, HEAL_EFFECT, PLAYER_HEALTH,
-    SPEED_TIME, SPEED_EFFECT, SHIELD_TIME
+    SPEED_TIME, SPEED_EFFECT, SHIELD_TIME, SHADOW_DELAY
 )
 from .assets_manager import AssetsManager
 from .audio_manager import AudioManager
@@ -66,8 +68,8 @@ class Game:
         self.player: Player = self.levels._player   # convenient shortcut
         
         # --- Shadow system ---
-        self.shadow = Shadow(self.assets["shadow"])
-        self.levels.shadow = self.shadow
+        self.shadows = []
+        self.levels.shadows = self.shadows
         self.shadow_start_time = 0.0
 
         # --- Game state ---
@@ -325,12 +327,13 @@ class Game:
         # Update invincibility timers
         self.player.update_invincibility(self.dt)
 
-        # Shadow system - Record player movement and update shadow
+        # Shadow system - Record player movement and update shadows
         if self.levels.shadow_enabled:
             current_time = self.seconds
-            self.shadow.record_player_movement(self.player, current_time)
-            self.shadow.update(current_time)
-            self.shadow.update_invincibility(self.dt)
+            for shadow in self.shadows:
+                shadow.record_player_movement(self.player, current_time)
+                shadow.update(current_time)
+                shadow.update_invincibility(self.dt)
 
         # Walking sfx
         if self.audio.music_play :
@@ -350,9 +353,11 @@ class Game:
         
         # Process shadow collision with player
         if self.levels.shadow_enabled:
-            if self.shadow.is_touching(self.player) and self.shadow.can_damage_player():
-                self.player.take_enemy_damage()
-                self.shadow.apply_damage()
+            for shadow in self.shadows:
+                if shadow.is_touching(self.player) and shadow.can_damage_player():
+                    self.player.take_enemy_damage()
+                    shadow.apply_damage()
+                    break
         
         # Check if player is dead
         if self.player.is_dead():
@@ -415,6 +420,8 @@ class Game:
             elif isinstance(obj, Heal):
                 if obj.is_touched(self.player) and self.player.health < PLAYER_HEALTH and not obj.collected:
                     obj.collect()
+                    if self.audio.music_play :
+                        self.audio.play_sfx("sfx_heal")
                     if self.player.health + HEAL_EFFECT <= 100:
                         self.player.health += HEAL_EFFECT
                     else :
@@ -424,6 +431,8 @@ class Game:
             elif isinstance(obj, Speed):
                 if obj.is_touched(self.player) and obj.cooldown == 0.0:
                     obj.collect()
+                    if self.audio.music_play :
+                        self.audio.play_sfx("sfx_speed")                    
                     obj.cooldown = 2*SPEED_TIME
                     self.player.speed += SPEED_EFFECT
                 if 0.0 < obj.cooldown <= 2*SPEED_TIME:
@@ -437,6 +446,8 @@ class Game:
             elif isinstance(obj, Shield):
                 if obj.is_touched(self.player) and obj.cooldown == 0.0:
                     obj.collect()
+                    if self.audio.music_play :
+                        self.audio.play_sfx("sfx_shield")                    
                     obj.cooldown = 2*SHIELD_TIME
                     self.player.invicible = True
                 if 0.0 < obj.cooldown <= 2*SHIELD_TIME:
@@ -605,8 +616,9 @@ class Game:
 
         # Shadow (drawn before player so it appears below)
         if self.levels.shadow_enabled:
-            shadow_img = self.assets[f"shadow_{self.shadow.direction}"]
-            self.screen.blit(shadow_img, (self.shadow.x, self.shadow.y))
+            for shadow in self.shadows:
+                shadow_img = self.assets[f"shadow_{shadow.direction}"]
+                self.screen.blit(shadow_img, (shadow.x, shadow.y))
 
         # Player
         player_img = self.assets[f"player_{self.player.direction}"]
@@ -919,7 +931,8 @@ class Game:
         self.current_map_index = 0
         layout = self.levels.load_sub_map(self.maze, 0, self, False)
         self.player.respawn()
-        self.shadow.reset()
+        for shadow in self.shadows:
+            shadow.reset()
         self._resize_window(layout)
         self.timer = pygame.time.get_ticks()
         self.clock.tick()
@@ -969,9 +982,16 @@ class Game:
                 layout = self.levels.load_sub_map(level_id, 0, self, True)
             self._resize_window(layout)
 
-        # Initialize shadow if enabled for this level
-        self.levels.shadow_enabled = self.levels.has_shadow(level_id)
-        self.shadow.reset()
+        # Initialize shadows if enabled for this level
+        shadow_count = self.levels.get_shadow_count(level_id)
+        self.levels.shadow_enabled = shadow_count > 0
+        self.shadows = [
+            Shadow(self.assets["shadow"], SHADOW_DELAY + i)
+            for i in range(shadow_count)
+        ]
+        self.levels.shadows = self.shadows
+        for shadow in self.shadows:
+            shadow.reset()
         self.shadow_start_time = 0.0
 
         self.audio.switch_to_level(level_id)

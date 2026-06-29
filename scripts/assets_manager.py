@@ -117,6 +117,9 @@ class AssetsManager:
             "sfx_walk3": "sounds/sfx/sfx_walk3.ogg",
             "sfx_walk4": "sounds/sfx/sfx_walk4.ogg",
             "sfx_light": "sounds/sfx/sfx_light.ogg",
+            "sfx_shield": "sounds/sfx/sfx_shield.mp3",
+            "sfx_heal": "sounds/sfx/sfx_heal.mp3",
+            "sfx_speed": "sounds/sfx/sfx_speed.wav",
         }
         
         # Load all sound files

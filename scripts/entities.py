@@ -409,7 +409,7 @@ class Enemy:
 # ==================================================================
 
 class Shadow:
-    def __init__(self, img):
+    def __init__(self, img, delay=SHADOW_DELAY):
         from collections import deque
         self.x = -100.0 # Not on the screen by default
         self.y = -100.0
@@ -420,10 +420,10 @@ class Shadow:
         
         # History of player positions with timestamps
         # Each entry: (x, y, direction, timestamp)
-        self.position_history = deque(maxlen=1000)
+        self.position_history = deque(maxlen=3000)
         
         # Delay in seconds
-        self.delay = SHADOW_DELAY
+        self.delay = delay
         
         # Collision tracking
         self.shadow_invincibility_timer = 0.0
