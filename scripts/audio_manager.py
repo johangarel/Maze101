@@ -20,10 +20,8 @@ class AudioManager:
         # Build playlist indexed by level (1-based, index 0 = menu)
         self._playlist = [None] * (NB_LEVELS + 1)
         self._playlist[0] = assets["menu_music"]
-        self._playlist[1] = assets["music_level1"]
-        self._playlist[2] = assets["music_level2"]
-        self._playlist[3] = assets["music_level3"]
-        self._playlist[4] = assets["music_level4"]
+        for i in range(1,8):
+            self._playlist[i] = assets[f"music_level{i}"]
         self._playlist[42] = assets["music_level42"]
 
         # Initialize volumes

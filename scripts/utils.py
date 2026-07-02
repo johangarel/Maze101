@@ -55,6 +55,7 @@ def load_levels_config() -> dict:
             "file": config.get("files", []),
             "tps": meta_data.get("tps", []),
             "fow": meta_data.get("fow", False),
+            "submap_fow": meta_data.get("submap_fow", {}),
             "name": meta_data.get("name"),
             "color": color,
             "reward": meta_data.get("reward", 0),
@@ -71,7 +72,7 @@ def astar(layout: list, start: tuple, end: tuple, tile_size: int) -> list:
     Returns an ordered list of pixel (x, y) waypoints to follow, or [] if no
     path exists.
  
-    Walkable cells: anything that is not a wall ('W') 
+    Walkable cells: anything that is not a wall ('W') or a door (uppercase letter, excluding 'E' for enemy spawn)
     """
     def to_grid(px, py):
         return (int(px // tile_size), int(py // tile_size))
@@ -85,7 +86,8 @@ def astar(layout: list, start: tuple, end: tuple, tile_size: int) -> list:
         if col < 0 or col >= len(layout[row]):
             return False
         ch = layout[row][col]
-        return not (ch == 'W' or ch.isupper())
+        # 'E' (enemy spawn) is walkable, but other uppercase letters (doors) are not
+        return not (ch == 'W' or (ch.isupper() and ch != 'E'))
 
     sc, sr = to_grid(*start)
     ec, er = to_grid(*end)

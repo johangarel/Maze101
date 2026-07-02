@@ -1,0 +1,22 @@
+{
+  "name": "Haunted Sky",
+  "color": [100, 0, 200],
+  "reward": 6,
+  "tps": [],
+  "fow": {
+    "0": false,
+    "1": false,
+    "2": false,
+    "3": false,
+    "4": true
+},
+  "shadow": 10,
+  "enemies": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "submap_routes": {}
+}

@@ -29,7 +29,7 @@ class Maze:
                 )
 
                 if result == "spawn":
-                    self.spawn_point = (x, y)
+                    self.spawn_point = (x+player.width/2, y+player.width/2)
                 elif result == "enemy_spawn":
                     self.enemy_spawns.append((x, y))
                 elif isinstance(result, Wall):

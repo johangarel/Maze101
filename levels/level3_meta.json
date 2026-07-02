@@ -3,8 +3,17 @@
   "color": [0, 255, 0],
   "reward": 2,
   "tps": [1, 0, 5, 4, null, null],
-  "fow": false,
+  "fow": {
+    "0": false,
+    "1": false,
+    "2": false
+},
   "shadow": 0,
+  "enemies": [
+    [],
+    [],
+    []
+  ],
   "submap_routes": {
     "0": {
       "0": {

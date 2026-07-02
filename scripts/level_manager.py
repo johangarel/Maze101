@@ -7,11 +7,10 @@ from .settings import (
 
 
 class LevelManager:
-    """Loads, resets, and exposes data for each level."""
 
     def __init__(self, player, level_configs: dict = None):
         self._player = player
-        # Load configs from central file or use provided ones for backwards compatibility
+        # Load configs from central file
         self.level_configs = level_configs if level_configs else load_levels_config()
         
         # Data per level (0-based indexed lists, level N → index N-1)
@@ -34,9 +33,24 @@ class LevelManager:
     def special_objs(self, maze_id: int) -> list:
         return self.special_objs_list[maze_id - 1]
 
-    def has_fow(self, maze_id: int) -> bool:
+    def has_fow(self, maze_id: int, map_index: int = None) -> bool:
         cfg = self.level_configs.get(maze_id)
-        return bool(cfg and cfg.get("fow"))
+        if not cfg:
+            return False
+
+        submap_fow = cfg.get("fow", {})
+        if isinstance(submap_fow, dict):
+            if str(map_index) in submap_fow:
+                return bool(submap_fow[str(map_index)])
+
+        if not submap_fow:
+            meta_filename = f"level{maze_id}_meta.json"
+            meta_data = load_level_meta(meta_filename)
+            submap_fow = meta_data.get("fow", {})
+            if isinstance(submap_fow, dict) and str(map_index) in submap_fow:
+                return bool(submap_fow[str(map_index)])
+
+        return submap_fow
     
     def get_shadow_count(self, maze_id: int) -> int:
         """Return the number of shadows enabled for this level."""
@@ -71,7 +85,11 @@ class LevelManager:
         submap_routes = meta_data.get("submap_routes", {})
 
         current_maze = Maze(layout, config["tps"], self._player, game, map_index=map_index, submap_routes=submap_routes)
-        self.enemy_list[maze_id - 1] = self._build_enemies(maze_id, map_index, current_maze.enemy_spawns, game)
+        
+        # Load enemies only for this specific submap
+        submap_enemies = self._load_submap_enemies(maze_id, map_index, current_maze.enemy_spawns, game)
+        self.enemy_list[maze_id - 1] = submap_enemies
+        
         spawn = spawn_override or current_maze.spawn_point
 
         self.level_map_list[maze_id - 1]    = layout
@@ -95,7 +113,11 @@ class LevelManager:
         submap_routes = meta_data.get("submap_routes", {})
 
         current_maze = Maze(layout, config["tps"], self._player, game, map_index=0, submap_routes=submap_routes)
-        self.enemy_list[maze_id - 1] = self._build_enemies(maze_id, 0, current_maze.enemy_spawns, game)
+        
+        # Load enemies only for this specific submap (submap 0)
+        submap_enemies = self._load_submap_enemies(maze_id, 0, current_maze.enemy_spawns, game)
+        self.enemy_list[maze_id - 1] = submap_enemies
+        
         spawn = spawn_override or current_maze.spawn_point
 
         self.level_map_list[maze_id - 1]    = layout
@@ -153,13 +175,20 @@ class LevelManager:
 
         return layout, spawn_override
 
-    def _build_enemies(self, maze_id, map_index, spawns, game):
+    def _load_submap_enemies(self, maze_id: int, map_index: int, spawns, game):
+        """Load enemies for a specific submap."""
         enemies = []
         
         # Load enemy data from meta JSON file
         meta_filename = f"level{maze_id}_meta.json"
         meta_data = load_level_meta(meta_filename)
-        meta_enemies = meta_data.get("enemies", [])
+        meta_enemies_all = meta_data.get("enemies", [])
+        
+        # Get enemies for this specific submap
+        # meta_enemies_all is now a list of lists: [[enemies_for_map_0], [enemies_for_map_1], ...]
+        meta_enemies = []
+        if map_index < len(meta_enemies_all):
+            meta_enemies = meta_enemies_all[map_index]
         
         # Build enemies from spawns combined with patrol data from meta
         for i, (sx, sy) in enumerate(spawns):

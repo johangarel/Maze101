@@ -466,6 +466,7 @@ class Game:
                     obj.spawn_pos[0] + self.player.width / 2,
                     obj.spawn_pos[1] + self.player.width / 2,
                 )
+                self.player.invicible = False
                 self._resize_window(layout)
                 if self.audio.music_play :
                     self.audio.play_sfx("sfx_teleport")
@@ -641,7 +642,7 @@ class Game:
             pygame.draw.circle(self.screen, (0,255,255), (self.player.x + self.player.width//2, self.player.y + self.player.width//2), 35.0, 2)
 
         # Fog of war
-        if self.levels.has_fow(self.maze):
+        if self.levels.has_fow(self.maze, self.current_map_index):
             self._draw_fog()
 
         # Render health bar
@@ -890,10 +891,34 @@ class Game:
     def _draw_fog(self):
         fog = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         fog.fill((0, 0, 0, 255))
-        r = self.levels.vision_radius
-        for i in range(r, 0, -5):
-            alpha = int(255 * (i / r))
-            pygame.draw.circle(fog, (0, 0, 0, alpha), self.player.rect.center, i)
+
+        def draw_visibility_circle(center, radius):
+            if radius <= 0:
+                return
+
+            effective_radius = max(4, int(radius * 1.04))
+            step = max(2, effective_radius // 16)
+            mask = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            mask.fill((0, 0, 0, 0))
+
+            for i in range(effective_radius, 0, -step):
+                alpha = int(255 * max(0.0, 1.0 - (i / max(1, effective_radius))))
+                pygame.draw.circle(mask, (0, 0, 0, alpha), center, i)
+
+            fog.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
+
+        draw_visibility_circle(self.player.rect.center, self.levels.vision_radius)
+
+        for enemy in self.levels.enemies(self.maze):
+            if enemy.map_index == self.current_map_index:
+                enemy_radius = max(1, int(getattr(enemy, "detection_radius", self.levels.vision_radius) * 0.85))
+                draw_visibility_circle(enemy.rect.center, enemy_radius)
+
+        if self.levels.shadow_enabled:
+            for shadow in self.shadows:
+                shadow_radius = max(1, int(self.levels.vision_radius * 0.85))
+                draw_visibility_circle(shadow.rect.center, shadow_radius)
+
         self.screen.blit(fog, (0, 0))
 
     def _go_to_menu(self):

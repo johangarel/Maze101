@@ -16,8 +16,16 @@
     "meta": "level4_meta.json"
   },
   "5": {
-    "files": ["level5.txt"],
+    "files": ["level5_1.txt","level5_2.txt","level5_3.txt"],
     "meta": "level5_meta.json"
+  },
+  "6": {
+    "files": ["level6_1.txt","level6_2.txt","level6_3.txt","level6_4.txt","level6_5.txt"],
+    "meta": "level6_meta.json"
+  },
+  "7": {
+    "files": ["level7_1.txt","level7_2.txt","level7_3.txt","level7_4.txt","level7_5.txt","level7_6.txt","level7_7.txt"],
+    "meta": "level7_meta.json"
   },
   "42": {
     "files": ["level42.txt"],

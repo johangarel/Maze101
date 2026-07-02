@@ -101,6 +101,9 @@ class AssetsManager:
             "music_level2": "sounds/_level2.mp3",
             "music_level3": "sounds/_level3.mp3",
             "music_level4": "sounds/_level4.mp3",
+            "music_level5": "sounds/_level5.mp3",
+            "music_level6": "sounds/_level6.mp3",
+            "music_level7": "sounds/_level7.mp3",
             "music_level42": "sounds/_level42.mp3",
         }
         
