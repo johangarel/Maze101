@@ -110,7 +110,10 @@ class ProgressManager:
         prev = self.level_time[idx]
         if prev is None or time_spent < prev:
             self.level_time[idx] = time_spent
-            new_record = True
+            if prev is None:
+                new_record = 1
+            else :
+                new_record = 2
 
         # Persistence
         key = str(maze_id)

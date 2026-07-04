@@ -1,4 +1,4 @@
-from .entities import Key, Door, Enemy, Shadow
+from .entities import Player, Key, Door, Enemy, Shadow, Heal
 from .maze import Maze
 from .utils import load_map, generate_custom_maze, load_level_meta, load_levels_config
 from .settings import (
@@ -9,7 +9,7 @@ from .settings import (
 class LevelManager:
 
     def __init__(self, player, level_configs: dict = None):
-        self._player = player
+        self._player : Player = player
         # Load configs from central file
         self.level_configs = level_configs if level_configs else load_levels_config()
         
@@ -22,6 +22,11 @@ class LevelManager:
         self.vision_radius = VISION_RADIUS
         self.shadow = None  # Shadow entity
         self.shadow_enabled = False  # Whether shadow is enabled for current level
+
+        # Doors unlocked
+        self.opened_doors: dict = {}
+        # Heal pickups
+        self.collected_heals: dict = {}
 
     # ------------------------------------------------------------------
     # Current access
@@ -52,23 +57,75 @@ class LevelManager:
 
         return submap_fow
     
-    def get_shadow_count(self, maze_id: int) -> int:
-        """Return the number of shadows enabled for this level."""
+    def get_shadow_count(self, maze_id: int, map_index: int = 0) -> int:
+        """Return the number of shadows enabled for a given sub-map."""
         meta_filename = f"level{maze_id}_meta.json"
         meta_data = load_level_meta(meta_filename)
         shadow_value = meta_data.get("shadow", 0)
+
         if isinstance(shadow_value, bool):
             return 1 if shadow_value else 0
+
+        if isinstance(shadow_value, (list, tuple)):
+            if 0 <= map_index < len(shadow_value):
+                sub_value = shadow_value[map_index]
+                if isinstance(sub_value, bool):
+                    return 1 if sub_value else 0
+                try:
+                    return int(sub_value)
+                except (TypeError, ValueError):
+                    return 0
+            return 0
+
         try:
             return int(shadow_value)
         except (TypeError, ValueError):
             return 0
 
-    def has_shadow(self, maze_id: int) -> bool:
-        return self.get_shadow_count(maze_id) > 0
+    def has_shadow(self, maze_id: int, map_index: int = 0) -> bool:
+        return self.get_shadow_count(maze_id, map_index) > 0
 
     def enemies(self, maze_id):
         return self.enemy_list[maze_id - 1]
+
+    # ------------------------------------------------------------------
+    # Door memory
+    # ------------------------------------------------------------------
+
+    def record_door_opened(self, maze_id: int, map_index: int, door_id: str) -> None:
+        level_doors = self.opened_doors.setdefault(maze_id, {})
+        level_doors.setdefault(map_index, set()).add(door_id)
+
+    def reset_opened_doors(self, maze_id: int) -> None:
+        self.opened_doors.pop(maze_id, None)
+
+    def _restore_opened_doors(self, maze_id: int, map_index: int) -> None:
+        remembered = self.opened_doors.get(maze_id, {}).get(map_index)
+        if not remembered:
+            return
+        for obj in self.special_objs_list[maze_id - 1]:
+            if isinstance(obj, Door) and obj.id in remembered:
+                obj.open()
+
+    # ------------------------------------------------------------------
+    # Heal memory
+    # ------------------------------------------------------------------
+
+    def record_heal_collected(self, maze_id: int, map_index: int, x, y) -> None:
+        level_heals = self.collected_heals.setdefault(maze_id, {})
+        level_heals.setdefault(map_index, set()).add((x, y))
+
+    def reset_collected_heals(self, maze_id: int) -> None:
+        self.collected_heals.pop(maze_id, None)
+
+    def _restore_collected_heals(self, maze_id: int, map_index: int) -> None:
+        remembered = self.collected_heals.get(maze_id, {}).get(map_index)
+        if not remembered:
+            return
+        self.special_objs_list[maze_id - 1] = [
+            obj for obj in self.special_objs_list[maze_id - 1]
+            if not (isinstance(obj, Heal) and (obj.x, obj.y) in remembered)
+        ]
 
     # ------------------------------------------------------------------
     # Loading
@@ -96,6 +153,15 @@ class LevelManager:
         self.wall_list[maze_id - 1]         = current_maze.walls
         self.special_objs_list[maze_id - 1] = current_maze.special_objs
         self.vision_radius = VISION_RADIUS
+        self._restore_opened_doors(maze_id, map_index)
+
+        # Remove keys the player already picked up (persisted via player.keys).
+        self.special_objs_list[maze_id - 1] = [
+            obj for obj in self.special_objs_list[maze_id - 1]
+            if not (isinstance(obj, Key) and obj.door_id in self._player.keys)
+        ]
+        # Remove Heal pickups already consumed in this sub-map this run.
+        self._restore_collected_heals(maze_id, map_index)
 
         if first_map :
             self._player.move_spawn(spawn[0], spawn[1])
@@ -124,6 +190,8 @@ class LevelManager:
         self.wall_list[maze_id - 1]         = current_maze.walls
         self.special_objs_list[maze_id - 1] = current_maze.special_objs
         config["loaded"] = True
+        self._restore_opened_doors(maze_id, 0)
+        self._restore_collected_heals(maze_id, 0)
 
         self._player.move_spawn(spawn[0], spawn[1])
         self._player.respawn()

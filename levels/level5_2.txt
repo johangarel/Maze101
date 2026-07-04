@@ -6,14 +6,14 @@
                  W  W  
                  W  WWW
                  W   +W
-              WWWWW WWW
+              WWWWWFWWW
               W  W    W
               W       W
             WWW  W    W
            WW    W   +W
           WW  WWWW WWWW
          WW  WW        
-         W  WW    #W  W
+         W  WW     W  W
          W WW      W  W
          W   E     W  +
          W WWWWWWWSWWWW

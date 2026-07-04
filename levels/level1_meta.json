@@ -4,7 +4,7 @@
   "reward": 1,
   "tps": [1, null, 3, null, 5, null],
   "fow": {"0": false},
-  "shadow": 0,
+  "shadow": [0],
   "enemies": [
     []
   ],

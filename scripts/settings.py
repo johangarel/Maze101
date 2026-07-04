@@ -44,12 +44,13 @@ FADE_SPEED = {
 }
 
 GAME_NAME = "MAZE 101"
-GAME_VERSION = "v0.5 WIP"
+GAME_VERSION = "v0.5"
 START_TEXT = "START"
 PLAY_TEXT = "PLAY"
 VICTORY_TEXT = "You win !"
 LOADING_TEXT = "Loading..."
-RECORD_TEXT = "New record !"
+RECORD_TEXT1 = "New record !"
+RECORD_TEXT2 = 'Stars awarded !'
 SETTINGS_TITLE = "Settings"
 SAVE_TEXT = "Save changes"
 RESET_TEXT = "Reset"

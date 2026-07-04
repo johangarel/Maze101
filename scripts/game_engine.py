@@ -8,10 +8,11 @@ from .entities import (Player, Door, Key, Trap, Winpad, Portal, ButtonUI,
 from .utils import invert_color
 from .settings import (
     WIDTH, HEIGHT, NB_LEVELS, TILE_SIZE, FPS,
-    PLAYER_SPEED, PLAYER_WIDTH, PLAYER_DEFAULT_POS,
+    PLAYER_SPEED, PLAYER_WIDTH, PLAYER_DEFAULT_POS, 
     FADE_SPEED,
     TORCH_EFFECT, TORCH_TIME,
-    GAME_NAME, GAME_VERSION, START_TEXT, PLAY_TEXT, RECORD_TEXT,
+    GAME_NAME, GAME_VERSION, START_TEXT, 
+    PLAY_TEXT, RECORD_TEXT1, RECORD_TEXT2,
     VICTORY_TEXT, LOADING_TEXT, TUTORIAL_FR_TEXT, TUTORIAL_EN_TEXT,
     KEY_COLORS, DEFAULT_KEY_COLOR, SETTINGS_TITLE, FPS_PRESETS,
     HEIGHT_SETTINGS, SAVE_TEXT, RESET_TEXT,
@@ -395,6 +396,7 @@ class Game:
                         if self.audio.music_play :
                             self.audio.play_sfx("sfx_unlock")
                         obj.open()
+                        self.levels.record_door_opened(self.maze, self.current_map_index, obj.id)
 
             # Trap
             elif isinstance(obj, Trap):
@@ -420,6 +422,7 @@ class Game:
             elif isinstance(obj, Heal):
                 if obj.is_touched(self.player) and self.player.health < PLAYER_HEALTH and not obj.collected:
                     obj.collect()
+                    self.levels.record_heal_collected(self.maze, self.current_map_index, obj.x, obj.y)
                     if self.audio.music_play :
                         self.audio.play_sfx("sfx_heal")
                     if self.player.health + HEAL_EFFECT <= 100:
@@ -432,32 +435,32 @@ class Game:
                 if obj.is_touched(self.player) and obj.cooldown == 0.0:
                     obj.collect()
                     if self.audio.music_play :
-                        self.audio.play_sfx("sfx_speed")                    
+                        self.audio.play_sfx("sfx_speed")
                     obj.cooldown = 2*SPEED_TIME
-                    self.player.speed += SPEED_EFFECT
+                    self.player.speed_cooldown = SPEED_TIME                
+                    if self.player.speed < PLAYER_SPEED+SPEED_EFFECT:
+                        self.player.speed += SPEED_EFFECT
                 if 0.0 < obj.cooldown <= 2*SPEED_TIME:
                     obj.cooldown -= self.dt
                     if obj.cooldown <= 0.0:
                         obj.cooldown = 0.0
                         obj.respawn()
-                    elif obj.cooldown <= SPEED_TIME and self.player.speed == PLAYER_SPEED + SPEED_EFFECT :
-                        self.player.speed -= SPEED_EFFECT
             
+            # Shield
             elif isinstance(obj, Shield):
-                if obj.is_touched(self.player) and obj.cooldown == 0.0:
+                if obj.is_touched(self.player) and obj.cooldown == 0.0 and not self.player.invicible:
                     obj.collect()
                     if self.audio.music_play :
-                        self.audio.play_sfx("sfx_shield")                    
+                        self.audio.play_sfx("sfx_shield")
                     obj.cooldown = 2*SHIELD_TIME
+                    self.player.shield_cooldown = SHIELD_TIME
                     self.player.invicible = True
                 if 0.0 < obj.cooldown <= 2*SHIELD_TIME:
                     obj.cooldown -= self.dt
                     if obj.cooldown <= 0.0:
                         obj.cooldown = 0.0
                         obj.respawn()
-                    elif obj.cooldown <= SHIELD_TIME and self.player.invicible == True :
-                        self.player.invicible = False
-
+                        
             # Sub-map
             elif isinstance(obj, SubMapPortal) and obj.is_touched(self.player):
                 self.current_map_index = obj.target_map_index
@@ -467,13 +470,29 @@ class Game:
                     obj.spawn_pos[1] + self.player.width / 2,
                 )
                 self.player.invicible = False
+                self.player.shield_cooldown = 0.0
+                self.player.speed = PLAYER_SPEED
+                self.player.speed_cooldown = 0.0
                 self._resize_window(layout)
+                self._init_shadows_for_submap(self.current_map_index)
                 if self.audio.music_play :
                     self.audio.play_sfx("sfx_teleport")
                 break
 
         if not portal_contact:
             self.player.can_teleport = True
+
+        if self.player.shield_cooldown < 0.0:
+            self.player.invicible = False
+            self.player.shield_cooldown = 0.0
+        elif self.player.shield_cooldown > 0.0:
+            self.player.shield_cooldown -= self.dt
+        if self.player.speed_cooldown < 0.0:
+            self.player.speed -= SPEED_EFFECT
+            self.player.speed_cooldown = 0.0
+        elif self.player.speed_cooldown > 0.0:
+            self.player.speed_cooldown -= self.dt
+        
         
         # Check if player is dead
         if self.player.is_dead():
@@ -615,15 +634,15 @@ class Game:
                     # Adjust position to center the rotated image
                     self.screen.blit(rotated_img, (obj.x, obj.y))
 
-        # Shadow (drawn before player so it appears below)
+        # Player
+        player_img = self.assets[f"player_{self.player.direction}"]
+        self.screen.blit(player_img,(self.player.x,self.player.y))
+
+        # Shadow
         if self.levels.shadow_enabled:
             for shadow in self.shadows:
                 shadow_img = self.assets[f"shadow_{shadow.direction}"]
                 self.screen.blit(shadow_img, (shadow.x, shadow.y))
-
-        # Player
-        player_img = self.assets[f"player_{self.player.direction}"]
-        self.screen.blit(player_img,(self.player.x,self.player.y))
 
         # Enemy
         for enemy in self.levels.enemies(self.maze):
@@ -789,8 +808,10 @@ class Game:
         self.screen.blit(self.victory_text.txt, self.victory_text.pos)
         self.screen.blit(self.button_home.img, (self.button_home.x, self.button_home.y))
         self.screen.blit(self.final_timer_text.txt, self.final_timer_text.pos)
-        if self.display_record_txt:
-            self.screen.blit(self.record_txt.txt, self.record_txt.pos)
+        if self.display_record_txt == 2:
+            self.screen.blit(self.record_txt1.txt, self.record_txt1.pos)
+        elif self.display_record_txt == 1:
+            self.screen.blit(self.record_txt2.txt, self.record_txt2.pos)
 
     def _render_main_menu(self):
         self.screen.blit(self.name_text.txt, self.name_text.pos)
@@ -924,11 +945,13 @@ class Game:
     def _go_to_menu(self):
         if self.state == GameState.MAZE:
             self.levels.reset_objects(self.maze)
+            self.levels.reset_opened_doors(self.maze)
+            self.levels.reset_collected_heals(self.maze)
         self.player.reset()
         self.state = GameState.MAIN_MENU
         self.maze = 0
         self.level_menu = 0
-        self.display_record_txt = False
+        self.display_record_txt = 0
         self.levels.reset_vision()
         self.timer = pygame.time.get_ticks()
         
@@ -947,7 +970,10 @@ class Game:
         self.clock.tick()
 
     def _respawn(self):
+        self.player.keys = []
         self.levels.reset_objects(self.maze)
+        self.levels.reset_opened_doors(self.maze)
+        self.levels.reset_collected_heals(self.maze)
         self.levels.reset_vision()
         if self.audio.music_play :
             self.audio.play_sfx("sfx_death")
@@ -956,8 +982,7 @@ class Game:
         self.current_map_index = 0
         layout = self.levels.load_sub_map(self.maze, 0, self, False)
         self.player.respawn()
-        for shadow in self.shadows:
-            shadow.reset()
+        self._init_shadows_for_submap(0)
         self._resize_window(layout)
         self.timer = pygame.time.get_ticks()
         self.clock.tick()
@@ -991,7 +1016,7 @@ class Game:
         self.level_menu = 0
         self.maze       = level_id
         self.current_map_index = 0
-        self.display_record_txt = False
+        self.display_record_txt = 0
 
         if self.audio.music_play :
             self.audio.play_sfx("sfx_play")
@@ -1007,8 +1032,17 @@ class Game:
                 layout = self.levels.load_sub_map(level_id, 0, self, True)
             self._resize_window(layout)
 
-        # Initialize shadows if enabled for this level
-        shadow_count = self.levels.get_shadow_count(level_id)
+        # Initialize shadows if enabled (count depends on the active sub-map)
+        self._init_shadows_for_submap(self.current_map_index)
+
+        self.audio.switch_to_level(level_id)
+        self.timer = pygame.time.get_ticks()
+        self.clock.tick()
+
+    def _init_shadows_for_submap(self, map_index: int) -> None:
+        """(Re)build the shadow list to match the number of shadows configured
+        for the given sub-map of the active level, and reset them."""
+        shadow_count = self.levels.get_shadow_count(self.maze, map_index)
         self.levels.shadow_enabled = shadow_count > 0
         self.shadows = [
             Shadow(self.assets["shadow"], SHADOW_DELAY + i)
@@ -1018,10 +1052,6 @@ class Game:
         for shadow in self.shadows:
             shadow.reset()
         self.shadow_start_time = 0.0
-
-        self.audio.switch_to_level(level_id)
-        self.timer = pygame.time.get_ticks()
-        self.clock.tick()
 
     def _resize_window(self, layout):
         self.fade_to_black(self.width, self.height, self.fade_speed["normal"])
@@ -1072,9 +1102,10 @@ class Game:
         self.victory_text = TextUI(cx, cy // 2, a["font_main"], VICTORY_TEXT, (255, 255, 0))
         self.stars_display = TextUI(100, 50, a["font_medium"], str(self.progress.nb_stars), (255, 255, 255))
         self.v_txt = TextUI(2*cx -25 -6*len(GAME_VERSION), 25, a["font_small"], GAME_VERSION, (255, 255, 255))
-        self.record_txt = TextUI(cx, cy + 75, a["font_medium"], RECORD_TEXT, (255, 255, 255))
+        self.record_txt1 = TextUI(cx, cy + 75, a["font_medium"], RECORD_TEXT1, (255, 255, 255))
+        self.record_txt2 = TextUI(cx, cy + 75, a["font_medium"], RECORD_TEXT2, (255, 255, 255))
         self.settings_txt = TextUI(cx, 100, a["font_main"], SETTINGS_TITLE, (255, 255, 0))
-        self.display_record_txt = False
+        self.display_record_txt = 0
 
         self.fps_label = TextUI(
             130, self.settings_txt.centery + 100, self.assets["font_medium"], "FPS", (255, 255, 0)
@@ -1123,7 +1154,7 @@ class Game:
         self.button_left_arrow2  = ButtonUI(100, cy + 50, 50, 50, a["left_double_arrow"])
         self.button_home         = ButtonUI(50, 50, 75, 75, a["home"])
         self.button_levels       = [ButtonUI(cx, cy, 400, 250, None) for _ in range(NB_LEVELS)]
-        self.button_settings     = ButtonUI(self.width - 100, self.height - 100, 50, 50, a["settings"])
+        self.button_settings     = ButtonUI(self.width - 100, self.height - 100, 75, 75, a["settings"])
         self.button_music        = ButtonUI(cx - 250, cy - 75, 120, 120, a["music_on"])
 
         self.button_fps_arrow_left  = ButtonUI(cx + 100, self.fps_label.centery, 50, 50, a["left_arrow"])

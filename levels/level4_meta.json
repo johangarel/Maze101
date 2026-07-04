@@ -9,7 +9,7 @@
     "2": true,
     "3": true
   },
-  "shadow": 0,
+  "shadow": [0,0,0,0],
   "enemies": [
     [],
     [],

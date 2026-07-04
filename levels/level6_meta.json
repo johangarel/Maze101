@@ -2,15 +2,15 @@
   "name": "Haunted Sky",
   "color": [100, 0, 200],
   "reward": 6,
-  "tps": [],
+  "tps": [3,4,0,0,2,null],
   "fow": {
     "0": false,
     "1": false,
-    "2": false,
+    "2": true,
     "3": false,
-    "4": true
+    "4": false
 },
-  "shadow": 10,
+  "shadow": [1,5,5,5,10],
   "enemies": [
     [],
     [],
@@ -18,5 +18,36 @@
     [],
     []
   ],
-  "submap_routes": {}
+  "submap_routes": {
+    "0":{
+      "0":{
+        "target_map": 2,
+        "spawn_pos": [11,16]
+      },
+      "1":{
+        "target_map": 1,
+        "spawn_pos": [18,3] 
+      },
+      "2":{
+        "target_map": 4,
+        "spawn_pos": []
+      },
+      "3":{
+        "target_map": 3,
+        "spawn_pos": []
+      }
+    },
+    "1":{
+      "0":{
+        "target_map": 0,
+        "spawn_pos": [1,7]
+      }
+    },
+    "2":{
+      "0":{
+        "target_map": 0,
+        "spawn_pos": [13,1]
+      }
+    }
+  }
 }

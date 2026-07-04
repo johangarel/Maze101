@@ -13,7 +13,6 @@ class Player:
         self.x, self.y = pos
         self.default_pos = pos
         self.respawn_pos = pos
-        self.speed = speed
         self.width = width
         self.win = False
         self.keys = []
@@ -29,6 +28,10 @@ class Player:
         self.INVINCIBILITY_DURATION = INVICIBILITY_TIME  # seconds
         # Shield system
         self.invicible = False
+        self.shield_cooldown = 0.0
+        # Speed
+        self.speed = speed
+        self.speed_cooldown = 0.0
 
     def modify_speed(self,speed: int):
         self.speed = speed
@@ -149,6 +152,8 @@ class Player:
         self.health = self.max_health
         self.trap_invincibility_timer = 0.0
         self.enemy_invincibility_timer = 0.0
+        self.shield_cooldown = 0.0
+        self.speed_cooldown = 0.0
         self.invicible = False
 
     def respawn(self):
@@ -161,6 +166,8 @@ class Player:
         self.health = self.max_health
         self.trap_invincibility_timer = 0.0
         self.enemy_invincibility_timer = 0.0
+        self.shield_cooldown = 0.0
+        self.speed_cooldown = 0.0
         self.invicible = False
 
     def pick_up_key(self,key):
