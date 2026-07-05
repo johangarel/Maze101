@@ -91,11 +91,7 @@ class ProgressManager:
         - Adds earned stars to total.
         - Updates best time if beaten.
         - Returns True if it's a new record.
-
-        Note: level 42 is excluded from saving (troll level).
         """
-        if maze_id == 42:
-            return False
 
         idx = maze_id - 1
         new_record = False

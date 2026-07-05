@@ -349,7 +349,7 @@ class Game:
         # Update dynamic walls and handle push mechanics
         self._update_dynamic_walls()
 
-        self._process_objects()
+        softlock_possible = self._process_objects()
         self._process_enemies()
         
         # Process shadow collision with player
@@ -360,12 +360,37 @@ class Game:
                     shadow.apply_damage()
                     break
         
-        # Check if player is dead
-        if self.player.is_dead():
+        # Check if player is stuck (boxed in on all 4 sides) or dead
+        if self.state == GameState.MAZE and softlock_possible and self._is_player_softlocked(walls):
             self._respawn()
+        elif self.player.is_dead():
+            self._respawn()
+
+    def _is_player_softlocked(self, walls) -> bool:
+        traps = [obj for obj in self.levels.special_objs(self.maze) if isinstance(obj, Trap)]
+
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            future_rect = pygame.Rect(self.player.x + dx, self.player.y + dy,
+                                    self.player.width, self.player.width)
+
+            blocked = any(future_rect.colliderect(wall.rect) for wall in walls)
+            if not blocked:
+                trap_rect = future_rect.inflate(-2, -2)
+                blocked = any(trap.rect.colliderect(trap_rect) for trap in traps)
+            if not blocked:
+                if not self.player.is_in_bounds_horizontal(dx, self):
+                    blocked = True
+                elif not self.player.is_in_bounds_vertical(dy, self):
+                    blocked = True
+
+            if not blocked:
+                return False 
+
+        return True
 
     def _process_objects(self):
         portal_contact = False
+        softlock_possible = True
 
         for obj in list(self.levels.special_objs(self.maze)):
             # Portal
@@ -477,6 +502,7 @@ class Game:
                 self._init_shadows_for_submap(self.current_map_index)
                 if self.audio.music_play :
                     self.audio.play_sfx("sfx_teleport")
+                softlock_possible = False
                 break
 
         if not portal_contact:
@@ -493,10 +519,11 @@ class Game:
         elif self.player.speed_cooldown > 0.0:
             self.player.speed_cooldown -= self.dt
         
-        
         # Check if player is dead
         if self.player.is_dead():
             self._respawn()
+        
+        return softlock_possible
     
     def _process_enemies(self):
         current_map = self.current_map_index  # index sub-map actif
@@ -970,7 +997,6 @@ class Game:
         self.clock.tick()
 
     def _respawn(self):
-        self.player.keys = []
         self.levels.reset_objects(self.maze)
         self.levels.reset_opened_doors(self.maze)
         self.levels.reset_collected_heals(self.maze)
@@ -988,6 +1014,7 @@ class Game:
         self.clock.tick()
 
     def _handle_victory(self):
+        self.player.keys = []
         if self.audio.music_play :
             self.audio.play_sfx("sfx_win")
         self.player.victory()
@@ -1004,12 +1031,17 @@ class Game:
         self.center_x = self.screen.get_rect().centerx
         self.center_y = self.screen.get_rect().centery
 
+        self.levels.reset_objects(self.maze)
+        self.levels.reset_opened_doors(self.maze)
+        self.levels.reset_collected_heals(self.maze)
+
+        self.state = GameState.VICTORY_MENU
+        self.maze = 0
+
         self.final_timer_text = TextUI(
             self.center_x, self.center_y, self.assets["font_main"],
             f"Time : {self.seconds}", (255, 255, 255)
         )
-        self.state = GameState.VICTORY_MENU
-        self.maze = 0
 
     def _start_level(self, level_id: int):
         self.state      = GameState.MAZE
