@@ -93,7 +93,7 @@ Example meta file:
   "reward": 2,
   "tps": [1, 0, 5, 4, null, null],
   "fow": false,
-  "submap\_routes": {
+  "submap_routes": {
     "0": {
       "0": { "target_map": 1, "spawn_pos": [1, 1] }
     },
@@ -192,7 +192,7 @@ Exemple de fichier méta :
   "reward": 2,
   "tps": [1, 0, 5, 4, null, null],
   "fow": false,
-  "submap\_routes": {
+  "submap_routes": {
     "0": {
       "0": { "target_map": 1, "spawn_pos": [1, 1] }
     },
