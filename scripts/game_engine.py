@@ -217,12 +217,14 @@ class Game:
                 self.fps_value = TextUI(
                     self.button_fps_arrow_right.centerx - 125, self.button_fps_arrow_left.centery, self.assets["font_medium"], str(self.fps), (255, 255, 255)
                 )
+                self.display_save_settings_img = False
             if self.button_fps_arrow_right.is_pressed(mx, my):
                 i = FPS_PRESETS.index(self.fps)
                 self.fps = FPS_PRESETS[0] if i == len(FPS_PRESETS)-1 else FPS_PRESETS[i+1]
                 self.fps_value = TextUI(
                     self.button_fps_arrow_right.centerx - 125, self.button_fps_arrow_left.centery, self.assets["font_medium"], str(self.fps), (255, 255, 255)
                 )
+                self.display_save_settings_img = False
             
             # Music
             if self.button_vol_music_left.is_pressed(mx, my) and self.audio.music_vol > 0:
@@ -231,12 +233,14 @@ class Game:
                 self.music_vol = TextUI(
                     self.button_vol_music_right.centerx - 125, self.button_vol_music_left.centery, self.assets["font_medium"], str(int(100*self.audio.music_vol))+" %", (255, 255, 255)
                 )
+                self.display_save_settings_img = False
             if self.button_vol_music_right.is_pressed(mx, my) and self.audio.music_vol < 1:
                 self.audio.music_vol = round(self.audio.music_vol + 0.1, 1)
                 self.audio.update_volume()
                 self.music_vol = TextUI(
                     self.button_vol_music_right.centerx - 125, self.button_vol_music_left.centery, self.assets["font_medium"], str(int(100*self.audio.music_vol))+" %", (255, 255, 255)
                 )
+                self.display_save_settings_img = False
             
             # SFX
             if self.button_vol_sfx_left.is_pressed(mx, my) and self.audio.sfx_vol > 0:
@@ -244,28 +248,37 @@ class Game:
                 self.sfx_vol = TextUI(
                     self.button_vol_sfx_right.centerx - 125, self.button_vol_sfx_left.centery, self.assets["font_medium"], str(int(100*self.audio.sfx_vol))+" %", (255, 255, 255)
                 )
+                self.display_save_settings_img = False
             if self.button_vol_sfx_right.is_pressed(mx, my) and self.audio.sfx_vol < 1:
                 self.audio.sfx_vol = round(self.audio.sfx_vol + 0.1, 1)
                 self.sfx_vol = TextUI(
                     self.button_vol_sfx_right.centerx - 125, self.button_vol_sfx_left.centery, self.assets["font_medium"], str(int(100*self.audio.sfx_vol))+" %", (255, 255, 255)
                 )
+                self.display_save_settings_img = False
             
             # Key bindings
             if self.button_key_bindings["up"].is_pressed(mx, my):
                 self.binding_action = "up"
+                self.display_save_settings_img = False
             if self.button_key_bindings["down"].is_pressed(mx, my):
                 self.binding_action = "down"
+                self.display_save_settings_img = False
             if self.button_key_bindings["left"].is_pressed(mx, my):
                 self.binding_action = "left"
+                self.display_save_settings_img = False
             if self.button_key_bindings["right"].is_pressed(mx, my):
                 self.binding_action = "right"
+                self.display_save_settings_img = False
             if self.button_key_bindings["reset"].is_pressed(mx, my):
                 self.binding_action = "reset"
+                self.display_save_settings_img = False
             if self.button_key_bindings["menu"].is_pressed(mx, my):
                 self.binding_action = "menu"
+                self.display_save_settings_img = False
             
             if self.button_save_settings.is_pressed(mx, my):
                 self.progress.save_settings(self.progress.keys, self.fps, self.audio.music_vol, self.audio.sfx_vol)
+                self.display_save_settings_img = True
 
             if self.button_reset_settings.is_pressed(mx, my):
                 self.fps = FPS
@@ -281,6 +294,7 @@ class Game:
                     "music": K_e,
                     "menu": K_ESCAPE
                 }
+                self.display_save_settings_img = False
 
                 # Texts
                 self.sfx_vol = TextUI(
@@ -917,6 +931,8 @@ class Game:
         # Save button
         pygame.draw.rect(self.screen,(255,255,0),(self.center_x-100,HEIGHT_SETTINGS-75,200,50))
         self.screen.blit(self.save_text.txt, self.save_text.pos)
+        if self.display_save_settings_img :
+            self.screen.blit(self.assets["completed"],(self.center_x+120,HEIGHT_SETTINGS-75,200,50))
 
         # Reset button
         pygame.draw.rect(self.screen, (0, 0, 0), (self.button_reset_settings.x, self.button_reset_settings.y, self.button_reset_settings.width, self.button_reset_settings.height))
@@ -979,6 +995,7 @@ class Game:
         self.maze = 0
         self.level_menu = 0
         self.display_record_txt = 0
+        self.display_save_settings_img = False
         self.levels.reset_vision()
         self.timer = pygame.time.get_ticks()
         
@@ -997,6 +1014,7 @@ class Game:
         self.clock.tick()
 
     def _respawn(self):
+        self.player.keys = []
         self.levels.reset_objects(self.maze)
         self.levels.reset_opened_doors(self.maze)
         self.levels.reset_collected_heals(self.maze)
@@ -1138,6 +1156,7 @@ class Game:
         self.record_txt2 = TextUI(cx, cy + 75, a["font_medium"], RECORD_TEXT2, (255, 255, 255))
         self.settings_txt = TextUI(cx, 100, a["font_main"], SETTINGS_TITLE, (255, 255, 0))
         self.display_record_txt = 0
+        self.display_save_settings_img = False
 
         self.fps_label = TextUI(
             130, self.settings_txt.centery + 100, self.assets["font_medium"], "FPS", (255, 255, 0)
