@@ -37,87 +37,74 @@
 
 * First, create a new `.txt` file in `levels/` and define the level grid.
 
+
+
 Legend:
 
-  * `W` = Wall
-  * `P` = Player Spawn
-  * `T` = Trap
-  * `S` = Special teleporter (to load another map)
-  * `E` = Enemy
-  * Lowercase letter = Key
-  * Other uppercase letter = Door (ex. Key `a` opens Door `A`)
-  * Number = Teleporter
-  * Space = Nothing
+`W` = Wall
+
+`P` = Player Spawn
+
+`T` = Trap
+
+`S` = Special teleporter (to load another map)
+
+`E` = Enemy
+
+Lowercase letter = Key
+
+Other uppercase letter = Door (ex. Key `a` opens Door `A`)
+
+Number = Teleporter
+
+Space = Nothing
 
 
 
-<<<<<<< HEAD
-=======
-&#x09;Legend :
-
-&#x09;W = Wall
-
-&#x09;P = Player Spawn
-
-&#x09;T = Trap
-
-&#x09;S = Special teleporter (to load another map)
-
-&#x09;E = Enemy
-
-&#x09;lower case letter = Key
-
-&#x09;Other upper case letter = Door (ex. Key "a" opens Door "A")
-
-&#x09;Number = Teleporter
-
-&#x09;Space = Nothing
 
 
-
->>>>>>> 2e6de3e943794e022dc8fb7503a40bdb4beddc0e
-* Then, open `levels/levels_config.json` and add a new entry for the level. Use existing levels as examples.
+* Then, open `levels/levels\\\_config.json` and add a new entry for the level. Use existing levels as examples.
 
 Example entry:
 
 ```json
 "6": {
-  "files": ["level6.txt"],
-  "meta": "level6_meta.json"
+  "files": \\\["level6.txt"],
+  "meta": "level6\\\_meta.json"
 }
 ```
 
-* Create the meta file in `levels/`, for example `level6_meta.json`.
+* Create the meta file in `levels/`, for example `level6\\\_meta.json`.
 Important fields:
 
   * `name`: display name for the level
-  * `color`: RGB list like `[255, 128, 0]`
+  * `color`: RGB list like `\\\[255, 128, 0]`
   * `reward`: number of stars for completion
   * `tps`: teleporter mapping, using `null` for unused portals
   * `fow`: `true` or `false`
-  * `submap_routes`: optional routes between maps when using multiple files
+  * `submap\\\_routes`: optional routes between maps when using multiple files
 
 Example meta file:
 
 ```json
 {
   "name": "Hidden Vault",
-  "color": [255, 128, 0],
+  "color": \\\[255, 128, 0],
   "reward": 2,
-  "tps": [1, 0, 5, 4, null, null],
+  "tps": \\\[1, 0, 5, 4, null, null],
   "fow": false,
-  "submap_routes": {
+  "submap\\\_routes": {
     "0": {
-      "0": { "target_map": 1, "spawn_pos": [1, 1] }
+      "0": { "target\\\_map": 1, "spawn\\\_pos": \\\[1, 1] }
     },
     "1": {
-      "0": { "target_map": 0, "spawn_pos": [1, 1] }
+      "0": { "target\\\_map": 0, "spawn\\\_pos": \\\[1, 1] }
     }
   }
 }
 ```
 
-* If the level uses multiple maps, add several filenames to `files` and configure `submap_routes` in the meta file.
+* If the level uses multiple maps, add several filenames to `files` and configure `submap\\\_routes` in the meta file.
 
 
 
@@ -164,75 +151,59 @@ Example meta file:
 
 Légende :
 
-  * `W` = Mur
-  * `P` = Point d'apparition du joueur
-  * `T` = Piège
-  * `S` = Téléporteur spécial (charge une autre carte)
-  * `E` = Ennemi
-  * Lettre minuscule = Clé
-  * Autre lettre majuscule = Porte (ex. : la clé `a` ouvre la porte `A`)
-  * Chiffre = Téléporteur
-  * Espace = Rien
+* `W` = Mur
+* `P` = Point d'apparition du joueur
+* `T` = Piège
+* `S` = Téléporteur spécial (charge une autre carte)
+* `E` = Ennemi
+* Lettre minuscule = Clé
+* Autre lettre majuscule = Porte (ex. : la clé `a` ouvre la porte `A`)
+* Chiffre = Téléporteur
+* Espace = Rien
 
 
 
-* Ensuite, ouvrez `levels/levels_config.json` et ajoutez une entrée pour le nouveau niveau. Inspirez-vous des niveaux existants.
+* Ensuite, ouvrez `levels/levels\\\_config.json` et ajoutez une entrée pour le nouveau niveau. Inspirez-vous des niveaux existants.
 
 Exemple d'entrée :
 
 ```json
 "6": {
-  "files": ["level6.txt"],
-  "meta": "level6_meta.json"
+  "files": \\\["level6.txt"],
+  "meta": "level6\\\_meta.json"
 }
 ```
 
-* Créez ensuite le fichier méta dans `levels/`, par exemple `level6_meta.json`.
-<<<<<<< HEAD
+* Créez ensuite le fichier méta dans `levels/`, par exemple `level6\\\_meta.json`.
 Champs importants :
 
   * `name` : nom affiché du niveau
-  * `color` : couleur RGB sous forme de liste `[255, 128, 0]`
+  * `color` : couleur RGB sous forme de liste `\\\[255, 128, 0]`
   * `reward` : nombre d'étoiles obtenues
   * `tps` : configuration des téléporteurs, `null` pour les portails non utilisés
   * `fow` : `true` ou `false`
-  * `submap_routes` : optionnel, pour relier plusieurs cartes
-=======
-Champs importants :
-
-  * `name` : nom affiché du niveau
-  * `color` : couleur RGB sous forme de liste `[255, 128, 0]`
-  * `reward` : nombre d'étoiles obtenues
-  * `tps` : configuration des téléporteurs, `null` pour les portails non utilisés
-  * `fow` : `true` ou `false`
-  * `submap_routes` : optionnel, pour relier plusieurs cartes
->>>>>>> 2e6de3e943794e022dc8fb7503a40bdb4beddc0e
-
+  * `submap\\\_routes` : optionnel, pour relier plusieurs cartes
 Exemple de fichier méta :
 
 ```json
 {
   "name": "Coffre caché",
-  "color": [255, 128, 0],
+  "color": \\\[255, 128, 0],
   "reward": 2,
-  "tps": [1, 0, 5, 4, null, null],
+  "tps": \\\[1, 0, 5, 4, null, null],
   "fow": false,
-  "submap_routes": {
+  "submap\\\_routes": {
     "0": {
-      "0": { "target_map": 1, "spawn_pos": [1, 1] }
+      "0": { "target\\\_map": 1, "spawn\\\_pos": \\\[1, 1] }
     },
     "1": {
-<<<<<<< HEAD
-      "0": { "targe_map": 0, "spawn_pos": [1, 1] }
-=======
-      "0": { "target_map": 0, "spawn_pos": [1, 1] }
->>>>>>> 2e6de3e943794e022dc8fb7503a40bdb4beddc0e
+      "0": { "target\\\_map": 0, "spawn\\\_pos": \\\[1, 1] }
     }
   }
 }
 ```
 
-* Si le niveau utilise plusieurs fichiers de carte, ajoutez plusieurs noms dans `files` et configurez `submap_routes` dans le fichier méta.
+* Si le niveau utilise plusieurs fichiers de carte, ajoutez plusieurs noms dans `files` et configurez `submap\\\_routes` dans le fichier méta.
 
 
 
