@@ -204,6 +204,10 @@ Exemple de fichier méta :
 ```
 
 * Si le niveau utilise plusieurs fichiers de carte, ajoutez plusieurs noms dans `files` et configurez `submap_routes` dans le fichier méta.
+<<<<<<< HEAD
+=======
+
+>>>>>>> 42ab79253f1f37c35de8f428b86c5f665f74734d
 
 
 
