@@ -51,6 +51,31 @@ Legend:
 
 
 
+<<<<<<< HEAD
+=======
+&#x09;Legend :
+
+&#x09;W = Wall
+
+&#x09;P = Player Spawn
+
+&#x09;T = Trap
+
+&#x09;S = Special teleporter (to load another map)
+
+&#x09;E = Enemy
+
+&#x09;lower case letter = Key
+
+&#x09;Other upper case letter = Door (ex. Key "a" opens Door "A")
+
+&#x09;Number = Teleporter
+
+&#x09;Space = Nothing
+
+
+
+>>>>>>> 2e6de3e943794e022dc8fb7503a40bdb4beddc0e
 * Then, open `levels/levels_config.json` and add a new entry for the level. Use existing levels as examples.
 
 Example entry:
@@ -163,6 +188,7 @@ Exemple d'entrée :
 ```
 
 * Créez ensuite le fichier méta dans `levels/`, par exemple `level6_meta.json`.
+<<<<<<< HEAD
 Champs importants :
 
   * `name` : nom affiché du niveau
@@ -171,6 +197,16 @@ Champs importants :
   * `tps` : configuration des téléporteurs, `null` pour les portails non utilisés
   * `fow` : `true` ou `false`
   * `submap_routes` : optionnel, pour relier plusieurs cartes
+=======
+Champs importants :
+
+  * `name` : nom affiché du niveau
+  * `color` : couleur RGB sous forme de liste `[255, 128, 0]`
+  * `reward` : nombre d'étoiles obtenues
+  * `tps` : configuration des téléporteurs, `null` pour les portails non utilisés
+  * `fow` : `true` ou `false`
+  * `submap_routes` : optionnel, pour relier plusieurs cartes
+>>>>>>> 2e6de3e943794e022dc8fb7503a40bdb4beddc0e
 
 Exemple de fichier méta :
 
@@ -186,7 +222,11 @@ Exemple de fichier méta :
       "0": { "target_map": 1, "spawn_pos": [1, 1] }
     },
     "1": {
+<<<<<<< HEAD
       "0": { "targe_map": 0, "spawn_pos": [1, 1] }
+=======
+      "0": { "target_map": 0, "spawn_pos": [1, 1] }
+>>>>>>> 2e6de3e943794e022dc8fb7503a40bdb4beddc0e
     }
   }
 }
