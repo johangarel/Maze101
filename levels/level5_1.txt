@@ -1,16 +1,16 @@
        f         T     
-P WWWWWWWWWWWWW WWW    
+P WWWWWWWWWWWWWFWWW    
   W+   W    +W  W WW   
   WWWWFWFWWWWW  W +W   
-                W WW   
+  F             W WW   
   W         W   W  W   
-       WWW  E   F  WW  
+  F    WWW  E   F  WW  
   W             W   W  
 TTW    E   W    WWW WWW
   W             F     W
   WWWW   WWW    W   W+W
-  W  F          W   WWW
-  W  W          W  EW  
+  W  F          W  EWWW
+  W  W          W   W  
   WWWW    WWW   W WWW  
   W +W    W  E  W   WWW
   W  F    W  W  F   A S

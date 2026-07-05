@@ -1,7 +1,7 @@
 {
   "name": "The Heist",
   "color": [40, 105, 155],
-  "reward": 6,
+  "reward": 4,
   "tps": [1,0],
   "fow": {
     "0": false,
