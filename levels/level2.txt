@@ -1,14 +1,14 @@
                          
 WWWWWWWWWWWWWWWWWWWWWWWWW
-WP    aW !   TT   T     T
-WWWWAWWWWWWT TT T   T   T
+WP    aW !   TT    TT   T
+WWWWAWWWWWWT TT TT      T
 W1W  W  WTTT TT TTTTT   T
 W   W   WTTT    T   T  TT
 WWW WWW WWWWWW  T 0 T   T
 W     W      W  T   T   T
 WWW WWWWWWWW W  TTTTTTW T
 W   W        W        W T
-W WWWWWW WWWWWTTTTTTT W T
+W WWWWWW WWWWWTTTTTT  W T
 W W5W        W        W T
 W W W WWWWWWWW  TTTTTTW T
 W W W W W W  W          T

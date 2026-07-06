@@ -1,6 +1,6 @@
        f         T     
 P WWWWWWWWWWWWWFWWW    
-  W+   W    +W  W WW   
+  W    W    +W  W WW   
   WWWWFWFWWWWW  W +W   
   F             W WW   
   W         W   W  W   
@@ -16,5 +16,5 @@ TTW    E   W    WWW WWW
   W  F    W  W  F   A S
   WWWWW   W  W  WW WWWW
   W   F      W  WW W   
-  W+W W         WWSW   
+  W W W         WWSW   
   WWWWWWWTWWWWWWWWWW   

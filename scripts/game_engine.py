@@ -832,7 +832,7 @@ class Game:
         if is_empty:
             coming_soon_txt = TextUI(
                 self.center_x, self.center_y, self.assets["font_medium"], 
-                "Coming soon...", inv_color
+                "NOT Coming soon.", inv_color
             )
             self.screen.blit(coming_soon_txt.txt, coming_soon_txt.pos)
 

@@ -1,7 +1,7 @@
 {
   "name": "Escape 7",
   "color": [255, 255, 0],
-  "reward": 11,
+  "reward": 12,
   "tps": [null,2,3,0,8,6,7,4,4,4],
   "fow": {
     "0": false,
